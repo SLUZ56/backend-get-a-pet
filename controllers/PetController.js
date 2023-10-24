@@ -238,31 +238,81 @@ module.exports = class PetController {
       res.status(200).json({ message: 'Pet atualizado com sucesso!'})
   }
 
+  // static async schedule(req, res) {
+  //   const id = req.params.id
+
+  //   // check if pet exists
+  //   const pet = await Pet.findOne({_id: id})
+
+  //   if(!pet) {
+  //     res.status(404).json({ message: 'Pet não encontrado!'})
+  //     return
+  //   }
+
+  //   // check if user registered the pet
+  //   const token = getToken(req)
+  //   const user = await getUserByToken(token)
+
+
+  //   if(pet.user._id.equals(user._id)) {
+  //     res.status(422).json({ message: 'Você não pode agendar uma visita com seu próprio pet!'})
+  //     return
+  //   }
+
+  //   // check if user has already scheduled a visit
+  //   if(pet.adopter) {
+  //     if(pet.adopter._id.equals(user._id)){
+  //       res.status(422).json({ message: 'Você já agendou uma visita para esse pet!'})
+  //       return
+  //     }
+  //   }
+
+  //   // add user to pet
+  //   pet.adopter = {
+  //     _id: user._id,
+  //     name: user.name,
+  //     image: user.image
+  //   }
+
+  //   await Pet.findByIdAndUpdate(id, pet)
+
+  //   res.status(200).json({
+  //     message: `A visita foi agendada com sucesso, entre em contato com ${pet.user.name} pelo telefone ${pet.user.phone}`
+  //   })
+  // }
+  // schedule a visit
   static async schedule(req, res) {
     const id = req.params.id
 
     // check if pet exists
-    const pet = await Pet.findOne({_id: id})
+    const pet = await Pet.findOne({ _id: id })
 
-    if(!pet) {
-      res.status(404).json({ message: 'Pet não encontrado!'})
-      return
-    }
-
-    // check if user registered the pet
+    // check if user owns this pet
     const token = getToken(req)
     const user = await getUserByToken(token)
 
-
-    if(pet.user._id.equals(user._id)) {
-      res.status(422).json({ message: 'Você não pode agendar uma visita com seu próprio pet!'})
-      return
+    // console.log(pet)
+    try {
+      if (pet.user._id.equals(user._id)) {
+        res.status(422).json({
+          message: 'Você não pode agendar uma visita com seu próprio Pet!',
+        })
+        return
+      }
+      
+    } catch (error) {
+      console.log(error)
+      
     }
 
-    // check if user has already scheduled a visit
-    if(pet.adopter) {
-      if(pet.adopter._id.equals(user._id)){
-        res.status(422).json({ message: 'Você já agendou uma visita para esse pet!'})
+   
+
+    // check if user has already adopted this pet
+    if (pet.adopter) {
+      if (pet.adopter._id.equals(user._id)) {
+        res.status(422).json({
+          message: 'Você já agendou uma visita para este Pet!',
+        })
         return
       }
     }
@@ -271,28 +321,31 @@ module.exports = class PetController {
     pet.adopter = {
       _id: user._id,
       name: user.name,
-      image: user.image
+      image: user.image,
     }
 
-    await Pet.findByIdAndUpdate(id, pet)
+    console.log(pet)
+
+    await Pet.findByIdAndUpdate(pet._id, pet)
 
     res.status(200).json({
-      message: `A visita foi agendada com sucesso, entre em contato com ${pet.user.name} pelo telefone ${pet.user.phone}`
+      message: `A visita foi agendada com sucesso, entre em contato com ${pet.user.name} no telefone: ${pet.user.phone}`,
     })
   }
 
-  static async concludeAdption(req, res) {
 
-    const id = req.params.id
+  // static async concludeAdption(req, res) {
 
-     // check if pet exists
-     const pet = await Pet.findOne({_id: id})
+  //   const id = req.params.id
 
-     if(!pet) {
-       res.status(404).json({ message: 'Pet não encontrado!'})
-       return
-     }
+  //    // check if pet exists
+  //    const pet = await Pet.findOne({_id: id})
+
+  //    if(!pet) {
+  //      res.status(404).json({ message: 'Pet não encontrado!'})
+  //      return
+  //    }
 
 
-  }
+  // }
 }
