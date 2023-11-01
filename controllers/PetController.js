@@ -184,7 +184,7 @@ module.exports = class PetController {
        return
      }
 
-      // check if logged in user registered the pet
+    // check if logged in user registered the pet
     const token = getToken(req)
     const user = await getUserByToken(token)
 
@@ -305,8 +305,6 @@ module.exports = class PetController {
       
     }
 
-   
-
     // check if user has already adopted this pet
     if (pet.adopter) {
       if (pet.adopter._id.equals(user._id)) {
@@ -334,18 +332,36 @@ module.exports = class PetController {
   }
 
 
-  // static async concludeAdption(req, res) {
+  static async concludeAdption(req, res) {
 
-  //   const id = req.params.id
+    const id = req.params.id
 
-  //    // check if pet exists
-  //    const pet = await Pet.findOne({_id: id})
+     // check if pet exists
+     const pet = await Pet.findOne({_id: id})
 
-  //    if(!pet) {
-  //      res.status(404).json({ message: 'Pet não encontrado!'})
-  //      return
-  //    }
+     if(!pet) {
+       res.status(404).json({ message: 'Pet não encontrado!'})
+       return
+     }
+
+     // check if logged in user registered the pet
+    const token = getToken(req)
+    const user = await getUserByToken(token)
 
 
-  // }
+    if(pet.user._id.toString() !== user._id.toString()) {
+      res.status(422).json({ message: 'Houve um problema em processar a sua solicitação, tente novamente mais tarde!'})
+      return
+    }
+
+     pet.available = false
+
+     await Pet.findByIdAndUpdate(id, pet)
+
+     res.status(200).json({
+      message: 'Parabens! O ciclo de adoção foi finalizado com sucesso!'
+     })
+
+
+  }
 }
