@@ -210,7 +210,9 @@ module.exports = class UserController {
             { new: true}
          )
 
-         res.status(200).json({ message: 'Usuário atualizado com sucesso!'})
+         res.status(200).json({ message: 'Usuário atualizado com sucesso!',
+         data: updatedUser
+      })
 
       } catch(err){
          res.status(500).json({ message: err })
