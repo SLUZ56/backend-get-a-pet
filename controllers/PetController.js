@@ -35,10 +35,16 @@ module.exports = class PetController {
       res.status(422).json({message: "O cor é obrigatória!"})
       return
     }
-    if(images.length === 0) {
-      res.status(422).json({message: "A imagem é obrigatória!"})
+
+    if (!images) {
+      res.status(422).json({ message: 'A imagem é obrigatória!' })
       return
     }
+
+    // if(images.length === 0) {
+    //   res.status(422).json({message: "A imagem é obrigatória!"})
+    //   return
+    // }
 
     // get pet owner
     const token = getToken(req)
@@ -67,7 +73,7 @@ module.exports = class PetController {
       const newPet = await pet.save()
       res.status(201).json({
         message: 'Pet cadastrado com sucesso!',
-        newPet
+        newPet: newPet
       })
       
     } catch (error) {
@@ -77,6 +83,7 @@ module.exports = class PetController {
     }
   }
 
+  // get all registered pets
   static async getAll(req, res) {
       const pets = await Pet.find().sort('-createdAt')
 
@@ -85,12 +92,13 @@ module.exports = class PetController {
       })
   }
 
+  // get all user pets
   static async getAllUserPets(req, res) {
     // get user from token
     const token = getToken(req)
     const user  = await getUserByToken(token)
 
-    const pets = await Pet.find({'user._id': user._id}).sort('-createdAt')
+    const pets = await Pet.find({'user._id': user._id})
 
     res.status(200).json({
       pets: pets
@@ -98,12 +106,13 @@ module.exports = class PetController {
 
   }
 
+   // get all user adoptions
   static async getAllUserAdoptions(req, res) {
     // get user from token
     const token = getToken(req)
     const user  = await getUserByToken(token)
 
-    const pets = await Pet.find({'adopter._id': user._id}).sort('-createdAt')
+    const pets = await Pet.find({'adopter._id': user._id})
 
     res.status(200).json({
       pets: pets
@@ -167,6 +176,7 @@ module.exports = class PetController {
 
   }
 
+   // update a pet
   static async updatePet(req, res) {
     const id = req.params.id
 
@@ -223,8 +233,8 @@ module.exports = class PetController {
         updateData.color = color
       } 
 
-      if(images.length === 0) {
-        res.status(422).json({message: "A imagem é obrigatória!"})
+      if (!images) {
+        res.status(422).json({ message: 'A imagem é obrigatória!' })
         return
       } else {
         updateData.images = []
@@ -233,9 +243,26 @@ module.exports = class PetController {
         })
       }
 
+
+      // if(images > 0) {
+      //   updateData.images = []
+      //   images.map((image) => {
+      //     updateData.images.push(image.filename)
+      //   })
+      // }
+
+      if (!available) {
+        res.status(422).json({ message: 'O status é obrigatório!' })
+        return
+      } else {
+        updateData.available = available
+      }
+  
+      updateData.description = description
+
       await Pet.findByIdAndUpdate(id, updateData)
 
-      res.status(200).json({ message: 'Pet atualizado com sucesso!'})
+      res.status(200).json({ pet: pet, message: 'Pet atualizado com sucesso!'})
   }
 
   // static async schedule(req, res) {
@@ -331,37 +358,52 @@ module.exports = class PetController {
     })
   }
 
-
-  static async concludeAdption(req, res) {
-
+   // conclude a pet adoption
+   static async concludeAdoption(req, res) {
     const id = req.params.id
 
-     // check if pet exists
-     const pet = await Pet.findOne({_id: id})
+    // check if pet exists
+    const pet = await Pet.findOne({ _id: id })
 
-     if(!pet) {
-       res.status(404).json({ message: 'Pet não encontrado!'})
-       return
-     }
+    pet.available = false
 
-     // check if logged in user registered the pet
-    const token = getToken(req)
-    const user = await getUserByToken(token)
+    await Pet.findByIdAndUpdate(pet._id, pet)
+
+    res.status(200).json({
+      pet: pet,
+      message: `Parabéns! O ciclo de adoção foi finalizado com sucesso!`,
+    })
 
 
-    if(pet.user._id.toString() !== user._id.toString()) {
-      res.status(422).json({ message: 'Houve um problema em processar a sua solicitação, tente novamente mais tarde!'})
-      return
-    }
+  // static async concludeAdoption(req, res) {
 
-     pet.available = false
+  //   const id = req.params.id
 
-     await Pet.findByIdAndUpdate(id, pet)
+  //    // check if pet exists
+  //    const pet = await Pet.findOne({_id: id})
 
-     res.status(200).json({
-      message: 'Parabens! O ciclo de adoção foi finalizado com sucesso!'
-     })
+  //    if(!pet) {
+  //      res.status(404).json({ message: 'Pet não encontrado!'})
+  //      return
+  //    }
 
+  //    // check if logged in user registered the pet
+  //   const token = getToken(req)
+  //   const user = await getUserByToken(token)
+
+
+  //   if(pet.user._id.toString() !== user._id.toString()) {
+  //     res.status(422).json({ message: 'Houve um problema em processar a sua solicitação, tente novamente mais tarde!'})
+  //     return
+  //   }
+
+  //    pet.available = false
+
+  //    await Pet.findByIdAndUpdate(id, pet)
+
+  //    res.status(200).json({
+  //     message: 'Parabéns! O ciclo de adoção foi finalizado com sucesso!'
+  //    })
 
   }
 }
